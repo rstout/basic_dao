@@ -1,0 +1,76 @@
+type Tokens = record {
+    amount_e8s: nat64;
+};
+
+type ProposalState = variant {
+   Open;
+   Accepted;
+   Rejected;
+   Executing;
+   Succeeded;
+   Failed;
+};
+
+type Proposal = record {
+  id: nat64;
+  timestamp: nat64;
+  proposer: principal;
+  payload: ProposalPayload;
+  state: ProposalState;
+  votes_yes: Tokens;
+  votes_no: Tokens;
+};
+
+type ProposalPayload = record {
+   canister_id: principal;
+   method: text;
+   message: vec nat8;
+};
+
+type Vote = variant {
+   Yes;
+   No;
+};
+
+type Account = record {
+    owner: principal;
+    tokens: Tokens;
+};
+
+type TransferArgs = record {
+    to: principal;
+    amount: Tokens;
+};
+
+type TransferResult = variant {
+    Ok;
+    Error: text;
+};
+
+type VoteArgs = record {
+    proposal_id: nat64;
+    vote: Vote;
+};
+
+service : {
+    // TODO: doc
+    transfer: (TransferArgs) -> (TransferResult);
+
+    // Returns the amount of Tokens the caller owns
+    account_balance: () -> (Tokens) query;
+
+    // Lists all accounts
+    list_accounts: () -> (vec Account) query;
+
+    // TODO: doc
+    submit_proposal: (ProposalPayload) -> (nat64);
+
+    // TODO: doc
+    get_proposal: (nat64) -> (opt Proposal);
+
+    // TODO: doc
+    list_proposals: () -> (vec Proposal);
+
+    // TODO: doc
+    vote: (VoteArgs) -> ();
+}
