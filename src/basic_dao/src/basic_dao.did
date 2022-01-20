@@ -19,6 +19,7 @@ type Proposal = record {
   state: ProposalState;
   votes_yes: Tokens;
   votes_no: Tokens;
+  voters: vec principal;
 };
 
 type ProposalPayload = record {
@@ -44,12 +45,17 @@ type TransferArgs = record {
 
 type TransferResult = variant {
     Ok;
-    Error: text;
+    Err: text;
 };
 
 type VoteArgs = record {
     proposal_id: nat64;
     vote: Vote;
+};
+
+type VoteResult = variant {
+    Ok: ProposalState;
+    Err: text;
 };
 
 service : {
@@ -65,12 +71,12 @@ service : {
     // TODO: doc
     submit_proposal: (ProposalPayload) -> (nat64);
 
-    // TODO: doc
+    // Return the proposal with the given ID, if one exists
     get_proposal: (nat64) -> (opt Proposal);
 
-    // TODO: doc
+    // Return the list of all proposals
     list_proposals: () -> (vec Proposal);
 
     // TODO: doc
-    vote: (VoteArgs) -> ();
+    vote: (VoteArgs) -> (VoteResult);
 }

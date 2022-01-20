@@ -36,8 +36,8 @@ impl Default for BasicDaoService {
 /// TODO: doc
 impl BasicDaoService {
     /// Transfer tokens from the caller's account to another account
-    pub fn transfer(&mut self, _args: TransferArgs) -> TransferResult {
-        TransferResult::Ok
+    pub fn transfer(&mut self, _args: TransferArgs) -> Result<(), String> {
+        Ok(())
     }
 
     /// Return the account balance of the caller
@@ -68,29 +68,63 @@ impl BasicDaoService {
             state: ProposalState::Open,
             votes_yes: Default::default(),
             votes_no: Default::default(),
+            voters: vec![],
         };
 
         self.proposals.insert(proposal_id, proposal);
         proposal_id
     }
 
-    // TODO: doc
+    /// Return the proposal with the given ID, if one exists
     pub fn get_proposal(&self, proposal_id: u64) -> Option<Proposal> {
         self.proposals.get(&proposal_id).cloned()
     }
 
-    // TODO: doc
-    pub fn vote(&mut self, _args: VoteArgs) {
-        ()
-    }
-
-    // TODO: doc
+    /// Return the list of all proposals
     pub fn list_proposals(&self) -> Vec<Proposal> {
         self.proposals.values().cloned().collect()
     }
 
-    // TODO: doc
-    pub async fn execute_proposal(&mut self, proposal: Proposal) {
+    // Vote on an open proposal
+    pub fn vote(&mut self, args: VoteArgs) -> Result<ProposalState, String> {
+        let caller = self.env.caller();
+
+        let proposal = self.proposals
+            .get_mut(&args.proposal_id)
+            .ok_or_else(|| format!("No proposal with ID {} exists", args.proposal_id))?;
+
+        if proposal.state != ProposalState::Open {
+            return Err(format!("Proposal {} is not open for voting", args.proposal_id))
+        }
+
+        let voting_tokens = self.accounts.get(&caller)
+            .ok_or_else(|| "Caller does not have any tokens to vote with".to_string())?
+            .clone();
+
+        if proposal.voters.contains(&self.env.caller()) {
+            return Err("Already voted".to_string());
+        }
+
+        match args.vote {
+            Vote::Yes => proposal.votes_yes += voting_tokens,
+            Vote::No => proposal.votes_no += voting_tokens,
+        }
+
+        proposal.voters.push(caller);
+
+        if proposal.votes_yes >= self.proposal_vote_threshold {
+            proposal.state = ProposalState::Accepted;
+        }
+
+        if proposal.votes_no >= self.proposal_vote_threshold {
+            proposal.state = ProposalState::Rejected;
+        }
+
+        Ok(proposal.state.clone())
+    }
+
+    // Execute an accepted proposal
+    pub async fn _execute_proposal(&mut self, _proposal: Proposal) {
         todo!()
     }
 }

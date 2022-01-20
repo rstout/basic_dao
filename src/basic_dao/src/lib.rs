@@ -13,7 +13,7 @@ thread_local! {
 }
 
 #[update]
-fn transfer(args: TransferArgs) -> TransferResult {
+fn transfer(args: TransferArgs) -> Result<(), String> {
     SERVICE.with(|service| service.borrow_mut().transfer(args))
 }
 
@@ -43,6 +43,6 @@ fn list_proposals() -> Vec<Proposal> {
 }
 
 #[update]
-fn vote(args: VoteArgs) {
-    SERVICE.with(|service| service.borrow_mut().vote(args));
+fn vote(args: VoteArgs) -> Result<ProposalState, String> {
+    SERVICE.with(|service| service.borrow_mut().vote(args))
 }
