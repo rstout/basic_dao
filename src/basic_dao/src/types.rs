@@ -2,7 +2,7 @@ use ic_cdk::export::{
     candid::{CandidType, Deserialize},
     Principal,
 };
-use std::ops::AddAssign;
+use std::ops::{AddAssign, SubAssign};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct BasicDaoStableStorage {
@@ -18,6 +18,12 @@ pub struct Tokens {
 impl AddAssign for Tokens {
     fn add_assign(&mut self, other: Self) {
         self.amount_e8s += other.amount_e8s;
+    }
+}
+
+impl SubAssign for Tokens {
+    fn sub_assign(&mut self, other: Self) {
+        self.amount_e8s -= other.amount_e8s;
     }
 }
 

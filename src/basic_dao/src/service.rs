@@ -56,8 +56,9 @@ impl BasicDaoService {
     }
 
     /// Submit a proposal
-    /// TODO: take proposal fee
-    pub fn submit_proposal(&mut self, payload: ProposalPayload) -> u64 {
+    pub fn submit_proposal(&mut self, payload: ProposalPayload) -> Result<u64, String> {
+        self.deduct_proposal_submission_deposit()?;
+
         let proposal_id = self.next_proposal_id;
         self.next_proposal_id += 1;
 
@@ -73,7 +74,7 @@ impl BasicDaoService {
         };
 
         self.proposals.insert(proposal_id, proposal);
-        proposal_id
+        Ok(proposal_id)
     }
 
     /// Return the proposal with the given ID, if one exists
@@ -114,7 +115,7 @@ impl BasicDaoService {
         proposal.voters.push(caller);
 
         if proposal.votes_yes >= self.proposal_vote_threshold {
-            // TODO: refund proposer
+            refund_proposal_submission_deposit(&proposal.proposer);
             proposal.state = ProposalState::Accepted;
         }
 
@@ -129,6 +130,32 @@ impl BasicDaoService {
     pub fn update_proposal_state(&mut self, proposal_id: u64, new_state: ProposalState) {
         if let Some(proposal) = self.proposals.get_mut(&proposal_id) {
             proposal.state = new_state
+        }
+    }
+
+    /// TODO: doc
+    fn deduct_proposal_submission_deposit(&mut self) -> Result<(), String> {
+        let caller = self.env.caller();
+        if let Some(account) = self.accounts.get_mut(&caller) {
+            if account.clone() < self.proposal_submission_deposit {
+                return Err(format!(
+                    "Caller's account must have at least {:?} to submit a proposal",
+                    self.proposal_submission_deposit
+                ));
+            } else {
+                *account -= self.proposal_submission_deposit.clone();
+            }
+        } else {
+            return Err("Caller needs an account to submit a proposal".to_string());
+        }
+
+        Ok(())
+    }
+
+    /// TODO: doc
+    fn refund_proposal_submission_deposit(&mut self, account_owner: &Principal) {
+        if let Some(account) = self.accounts.get_mut(account_owner) {
+            *account += self.proposal_submission_deposit.clone();
         }
     }
 }

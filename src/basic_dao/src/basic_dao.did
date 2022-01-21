@@ -28,6 +28,11 @@ type ProposalPayload = record {
    message: vec nat8;
 };
 
+type SubmitProposalResult = variant {
+    Ok: nat64;
+    Err: text;
+};
+
 type Vote = variant {
    Yes;
    No;
@@ -69,7 +74,7 @@ service : {
     list_accounts: () -> (vec Account) query;
 
     // TODO: doc
-    submit_proposal: (ProposalPayload) -> (nat64);
+    submit_proposal: (ProposalPayload) -> (SubmitProposalResult);
 
     // Return the proposal with the given ID, if one exists
     get_proposal: (nat64) -> (opt Proposal);

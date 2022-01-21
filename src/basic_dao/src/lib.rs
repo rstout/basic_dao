@@ -29,7 +29,7 @@ fn list_accounts() -> Vec<Account> {
 }
 
 #[update]
-fn submit_proposal(proposal: ProposalPayload) -> u64 {
+fn submit_proposal(proposal: ProposalPayload) -> Result<u64, String> {
     SERVICE.with(|service| service.borrow_mut().submit_proposal(proposal))
 }
 
