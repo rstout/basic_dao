@@ -10,14 +10,7 @@ pub struct BasicDaoService {
     pub accounts: HashMap<Principal, Tokens>,
     pub proposals: HashMap<u64, Proposal>,
     pub next_proposal_id: u64,
-
-    // The amount of tokens needed to vote "yes" to accept, or "no" to reject, a proposal
-    pub proposal_vote_threshold: Tokens,
-
-    // The amount of tokens that will be temporarily deducted from the account of
-    // a user that submits a proposal. If the proposal is Accepted, this deposit is returned,
-    // otherwise it is lost. This prevents users from submitting superfluous proposals.
-    pub proposal_submission_deposit: Tokens,
+    pub system_params: SystemParams,
 }
 
 impl Default for BasicDaoService {
@@ -27,8 +20,7 @@ impl Default for BasicDaoService {
             accounts: HashMap::new(),
             proposals: HashMap::new(),
             next_proposal_id: 0,
-            proposal_vote_threshold: Default::default(),
-            proposal_submission_deposit: Default::default(),
+            system_params: Default::default(),
         }
     }
 }
@@ -36,7 +28,24 @@ impl Default for BasicDaoService {
 /// TODO: doc
 impl BasicDaoService {
     /// Transfer tokens from the caller's account to another account
-    pub fn transfer(&mut self, _args: TransferArgs) -> Result<(), String> {
+    pub fn transfer(&mut self, transfer: TransferArgs) -> Result<(), String> {
+        let caller = self.env.caller();
+
+        if let Some(account) = self.accounts.get_mut(&caller) {
+            if account.clone() < transfer.amount {
+                return Err(format!(
+                    "Caller's account has insufficient funds to transfer {:?}",
+                    transfer.amount
+                ));
+            } else {
+                *account -= transfer.amount;
+                let to_account = self.accounts.entry(transfer.to).or_default();
+                *to_account += transfer.amount;
+            }
+        } else {
+            return Err("Caller needs an account to transfer funds".to_string());
+        }
+
         Ok(())
     }
 
@@ -114,16 +123,41 @@ impl BasicDaoService {
 
         proposal.voters.push(caller);
 
-        if proposal.votes_yes >= self.proposal_vote_threshold {
-            refund_proposal_submission_deposit(&proposal.proposer);
+        if proposal.votes_yes >= self.system_params.proposal_vote_threshold {
+            // Refund the proposal deposit when the proposal is accepted
+            if let Some(account) = self.accounts.get_mut(&proposal.proposer) {
+                *account += self.system_params.proposal_submission_deposit.clone();
+            }
+
             proposal.state = ProposalState::Accepted;
         }
 
-        if proposal.votes_no >= self.proposal_vote_threshold {
+        if proposal.votes_no >= self.system_params.proposal_vote_threshold {
             proposal.state = ProposalState::Rejected;
         }
 
         Ok(proposal.state.clone())
+    }
+
+    /// Update system params
+    ///
+    /// Only callable via proposal execution
+    pub fn update_system_params(&mut self, payload: UpdateSystemParamsPayload) {
+        if self.env.caller() != self.env.canister_id() {
+            return;
+        }
+
+        if let Some(transfer_fee) = payload.transfer_fee {
+            self.system_params.transfer_fee = transfer_fee;
+        }
+
+        if let Some(proposal_vote_threshold) = payload.proposal_vote_threshold {
+            self.system_params.proposal_vote_threshold = proposal_vote_threshold;
+        }
+
+        if let Some(proposal_submission_deposit) = payload.proposal_submission_deposit {
+            self.system_params.proposal_submission_deposit = proposal_submission_deposit;
+        }
     }
 
     /// Update the state of a proposal
@@ -133,29 +167,22 @@ impl BasicDaoService {
         }
     }
 
-    /// TODO: doc
+    /// Deduct the proposal submission deposit from the caller's account
     fn deduct_proposal_submission_deposit(&mut self) -> Result<(), String> {
         let caller = self.env.caller();
         if let Some(account) = self.accounts.get_mut(&caller) {
-            if account.clone() < self.proposal_submission_deposit {
+            if account.clone() < self.system_params.proposal_submission_deposit {
                 return Err(format!(
                     "Caller's account must have at least {:?} to submit a proposal",
-                    self.proposal_submission_deposit
+                    self.system_params.proposal_submission_deposit
                 ));
             } else {
-                *account -= self.proposal_submission_deposit.clone();
+                *account -= self.system_params.proposal_submission_deposit.clone();
             }
         } else {
             return Err("Caller needs an account to submit a proposal".to_string());
         }
 
         Ok(())
-    }
-
-    /// TODO: doc
-    fn refund_proposal_submission_deposit(&mut self, account_owner: &Principal) {
-        if let Some(account) = self.accounts.get_mut(account_owner) {
-            *account += self.proposal_submission_deposit.clone();
-        }
     }
 }

@@ -47,3 +47,8 @@ fn list_proposals() -> Vec<Proposal> {
 fn vote(args: VoteArgs) -> Result<ProposalState, String> {
     SERVICE.with(|service| service.borrow_mut().vote(args))
 }
+
+#[update]
+fn update_system_params(payload: UpdateSystemParamsPayload) {
+    SERVICE.with(|service| service.borrow_mut().update_system_params(payload))
+}

@@ -63,6 +63,12 @@ type VoteResult = variant {
     Err: text;
 };
 
+type UpdateSystemParamsPayload = record {
+    transfer_fee: opt Tokens;
+    proposal_vote_threshold: opt Tokens;
+    proposal_submission_deposit: opt Tokens;
+};
+
 service : {
     // TODO: doc
     transfer: (TransferArgs) -> (TransferResult);
@@ -84,4 +90,7 @@ service : {
 
     // TODO: doc
     vote: (VoteArgs) -> (VoteResult);
+
+    // TODO: doc
+    update_system_params: (UpdateSystemParamsPayload) -> ();
 }

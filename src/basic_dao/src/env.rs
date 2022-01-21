@@ -4,6 +4,7 @@ use ic_cdk::export::Principal;
 pub trait Environment {
     fn now(&self) -> u64;
     fn caller(&self) -> Principal;
+    fn canister_id(&self) -> Principal;
 }
 
 pub struct CanisterEnvironment {}
@@ -15,6 +16,10 @@ impl Environment for CanisterEnvironment {
 
     fn caller(&self) -> Principal {
         ic_cdk::caller()
+    }
+
+    fn canister_id(&self) -> Principal {
+        ic_cdk::id()
     }
 }
 
@@ -28,12 +33,17 @@ impl Environment for EmptyEnvironment {
     fn caller(&self) -> Principal {
         unimplemented!()
     }
+
+    fn canister_id(&self) -> Principal {
+        unimplemented!()
+    }
 }
 
 #[cfg(test)]
 pub struct TestEnvironment {
     pub now: u64,
     pub caller: Principal,
+    pub canister_id: Principal,
 }
 
 #[cfg(test)]
@@ -44,5 +54,9 @@ impl Environment for TestEnvironment {
 
     fn caller(&self) -> Principal {
         self.caller
+    }
+
+    fn canister_id(&self) -> Principal {
+        self.canister_id
     }
 }
