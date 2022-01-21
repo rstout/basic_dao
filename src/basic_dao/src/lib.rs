@@ -2,6 +2,7 @@ mod types;
 mod service;
 mod env;
 mod init;
+mod heartbeat;
 
 use ic_cdk_macros::*;
 use std::cell::RefCell;

@@ -28,7 +28,7 @@ pub enum ProposalState {
     Executing,
     Succeeded,
     Rejected,
-    Failed,
+    Failed(String),
 }
 
 #[derive(Clone, Debug, CandidType, Deserialize)]

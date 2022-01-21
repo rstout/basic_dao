@@ -8,7 +8,7 @@ type ProposalState = variant {
    Rejected;
    Executing;
    Succeeded;
-   Failed;
+   Failed: text;
 };
 
 type Proposal = record {

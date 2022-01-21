@@ -56,6 +56,7 @@ impl BasicDaoService {
     }
 
     /// Submit a proposal
+    /// TODO: take proposal fee
     pub fn submit_proposal(&mut self, payload: ProposalPayload) -> u64 {
         let proposal_id = self.next_proposal_id;
         self.next_proposal_id += 1;
@@ -113,6 +114,7 @@ impl BasicDaoService {
         proposal.voters.push(caller);
 
         if proposal.votes_yes >= self.proposal_vote_threshold {
+            // TODO: refund proposer
             proposal.state = ProposalState::Accepted;
         }
 
@@ -123,8 +125,10 @@ impl BasicDaoService {
         Ok(proposal.state.clone())
     }
 
-    // Execute an accepted proposal
-    pub async fn _execute_proposal(&mut self, _proposal: Proposal) {
-        todo!()
+    /// Update the state of a proposal
+    pub fn update_proposal_state(&mut self, proposal_id: u64, new_state: ProposalState) {
+        if let Some(proposal) = self.proposals.get_mut(&proposal_id) {
+            proposal.state = new_state
+        }
     }
 }
