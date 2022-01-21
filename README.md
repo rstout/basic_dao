@@ -1,18 +1,14 @@
-# Design Pattern: Pub/Sub
+# Basic DAO
 
-This sample project demonstrates like motoko pub-sub example.
+This sample project demonstrates a basic DAO
 
 ## Overview
 
-A common problem in both distributed and decentralized systems is keeping separate services (or canisters) synchronized with one another. While there are many potential solutions to this problem, a popular one is the Publisher/Subscriber pattern or "PubSub". PubSub is an especially valuable pattern on the Internet Computer as its primary drawback, message delivery failures, does not apply.
+TODO
 
 ## Implementation
 
-The first canister (Publisher) exposes a `subscribe` method that other canisters can call to register a callback to be executed whenever its other method `publish` is called with an event matching the subscribed topic.
-
-The second canister (Subscriber) updates its internal count when its `update_count` method is called.
-
-Note: There are many obvious improvements (keying subscribers by topic in Publisher, validating the topic in the callback) and callbacks can do much more complex things than update counters but hopefully this example illustrates the concepts in a simple way.
+TODO
 
 ## Prerequisites
 
@@ -52,26 +48,9 @@ Verify the following before running this demo:
    dfx canister install --all
    ```
 
-1. Subscribe to the `"Apples"` topic.
+1. List accounts.
 
    ```text
-   dfx canister call subscriber setup_subscribe '(principal "your publisher canister id","Apples")'
+   dfx canister call basic_dao list_accounts '()'
    ```
 
-1. Publish to the `"Apples"` topic.
-
-   ```text
-   dfx canister call publisher publish '(record { "topic" = "Apples"; "value" = 2 })'
-   ```
-
-1. Receive your subscription.
-
-   ```text
-   dfx canister call subscriber get_count
-   ```
-
-1. Observe the following result.
-
-   ```
-   (2)
-   ```
