@@ -25,6 +25,21 @@ impl Default for BasicDaoService {
     }
 }
 
+impl From<BasicDaoStableStorage> for BasicDaoService {
+    fn from(stable: BasicDaoStableStorage) -> BasicDaoService {
+        let accounts = stable.accounts.clone().into_iter().map(|a| (a.owner, a.tokens)).collect();
+        let proposals = stable.proposals.clone().into_iter().map(|p| (p.id, p)).collect();
+
+        BasicDaoService {
+            env: Box::new(EmptyEnvironment {}),
+            accounts,
+            proposals,
+            next_proposal_id: 0,
+            system_params: stable.system_params,
+        }
+    }
+}
+
 /// TODO: doc
 impl BasicDaoService {
     /// Transfer tokens from the caller's account to another account
@@ -38,7 +53,7 @@ impl BasicDaoService {
                     transfer.amount
                 ));
             } else {
-                *account -= transfer.amount;
+                *account -= transfer.amount.clone();
                 let to_account = self.accounts.entry(transfer.to).or_default();
                 *to_account += transfer.amount;
             }

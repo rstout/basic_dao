@@ -1,3 +1,9 @@
+type BasicDaoStableStorage = record {
+    accounts: vec Account;
+    proposals: vec Proposal;
+    system_params: SystemParams;
+};
+
 type Tokens = record {
     amount_e8s: nat64;
 };
@@ -25,11 +31,11 @@ type Proposal = record {
 type ProposalPayload = record {
    canister_id: principal;
    method: text;
-   message: vec nat8;
+   message: blob;
 };
 
 type SubmitProposalResult = variant {
-    Ok: nat64;
+    Ok: nat;
     Err: text;
 };
 
@@ -63,13 +69,22 @@ type VoteResult = variant {
     Err: text;
 };
 
+type SystemParams = record {
+    transfer_fee: Tokens;
+    proposal_vote_threshold: Tokens;
+    proposal_submission_deposit: Tokens;
+};
+
 type UpdateSystemParamsPayload = record {
     transfer_fee: opt Tokens;
     proposal_vote_threshold: opt Tokens;
     proposal_submission_deposit: opt Tokens;
 };
 
-service : {
+service : (BasicDaoStableStorage) -> {
+    // TODO: doc
+    get_system_params: () -> (SystemParams);
+
     // TODO: doc
     transfer: (TransferArgs) -> (TransferResult);
 

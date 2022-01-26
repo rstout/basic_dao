@@ -6,19 +6,14 @@ use std::ops::{AddAssign, SubAssign, Mul};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct BasicDaoStableStorage {
-    accounts: Vec<Account>,
-    proposals: Vec<Proposal>,
+    pub accounts: Vec<Account>,
+    pub proposals: Vec<Proposal>,
+    pub system_params: SystemParams,
 }
 
-#[derive(Clone, Copy, Debug, Default, CandidType, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, CandidType, Deserialize, PartialEq, PartialOrd)]
 pub struct Tokens {
     pub amount_e8s: u64,
-}
-
-impl Tokens {
-    pub fn one() -> Tokens {
-        Tokens { amount_e8s: 10_000_000 }
-    }
 }
 
 impl AddAssign for Tokens {
