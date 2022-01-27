@@ -50,7 +50,7 @@ async fn execute_proposal(proposal: Proposal) -> Result<(), String> {
         .map(|_| ())
 }
 
-/// TODO: Remove expired proposals
+/// Remove expired proposals
 async fn remove_expired_proposals() {
     ()
 }

@@ -43,6 +43,7 @@ impl Mul<u64> for Tokens {
     }
 }
 
+// The state of a Proposal
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq)]
 pub enum ProposalState {
     // The proposal is open for voting
@@ -64,6 +65,11 @@ pub enum ProposalState {
     Failed(String),
 }
 
+/// A proposal is a proposition to execute an arbitrary canister call
+///
+/// Token holders can vote to either accept the proposal and execute the given
+/// canister call, or vote to reject the proposal and not execute the canister
+/// call.
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct Proposal {
     pub id: u64,
@@ -76,6 +82,7 @@ pub struct Proposal {
     pub voters: Vec<Principal>,
 }
 
+/// The data needed to call a given method on a given canister with given args
 #[derive(Clone, Debug, CandidType, Deserialize)]
 pub struct ProposalPayload {
     pub canister_id: Principal,

@@ -1,6 +1,8 @@
 use ic_cdk::export::Principal;
 
-/// TODO: doc
+/// The functions that are provided by the environment that the canister runs in
+///
+/// This is primarily used to enable mocking out these values in tests
 pub trait Environment {
     fn now(&self) -> u64;
     fn caller(&self) -> Principal;

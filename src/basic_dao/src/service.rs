@@ -4,7 +4,7 @@ use ic_cdk::export::Principal;
 use std::collections::HashMap;
 
 
-/// TODO: doc
+/// Implements the Basic DAO interface
 pub struct BasicDaoService {
     pub env: Box<dyn Environment>,
     pub accounts: HashMap<Principal, Tokens>,
