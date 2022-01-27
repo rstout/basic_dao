@@ -2,7 +2,7 @@ use ic_cdk::export::{
     candid::{CandidType, Deserialize},
     Principal,
 };
-use std::ops::{AddAssign, SubAssign, Mul};
+use std::ops::{Add, AddAssign, SubAssign, Mul};
 
 #[derive(Clone, Debug, Default, CandidType, Deserialize)]
 pub struct BasicDaoStableStorage {
@@ -11,9 +11,17 @@ pub struct BasicDaoStableStorage {
     pub system_params: SystemParams,
 }
 
-#[derive(Clone, Debug, Default, CandidType, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, CandidType, Deserialize, PartialEq, PartialOrd)]
 pub struct Tokens {
     pub amount_e8s: u64,
+}
+
+impl Add for Tokens {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Tokens { amount_e8s: self.amount_e8s + other.amount_e8s }
+    }
 }
 
 impl AddAssign for Tokens {
@@ -37,11 +45,22 @@ impl Mul<u64> for Tokens {
 
 #[derive(Clone, Debug, CandidType, Deserialize, PartialEq)]
 pub enum ProposalState {
+    // The proposal is open for voting
     Open,
+
+    // Enough "yes" votes have been cast to accept the proposal, and it will soon be executed
     Accepted,
-    Executing,
-    Succeeded,
+
+    // Enough "no" votes have been cast to reject the proposal, and it will not be executed
     Rejected,
+
+    // The proposal is currently being executed
+    Executing,
+
+    // The proposal has been successfully executed
+    Succeeded,
+
+    // A failure occurred while executing the proposal
     Failed(String),
 }
 
@@ -90,6 +109,7 @@ pub struct VoteArgs {
 
 #[derive(Clone, Default, Debug, CandidType, Deserialize)]
 pub struct SystemParams {
+    // The fee incurred by transferring tokens
     pub transfer_fee: Tokens,
 
     // The amount of tokens needed to vote "yes" to accept, or "no" to reject, a proposal

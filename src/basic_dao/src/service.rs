@@ -40,7 +40,7 @@ impl From<BasicDaoStableStorage> for BasicDaoService {
     }
 }
 
-/// TODO: doc
+/// Implements the Basic DAO interface
 impl BasicDaoService {
     /// Transfer tokens from the caller's account to another account
     pub fn transfer(&mut self, transfer: TransferArgs) -> Result<(), String> {
@@ -53,7 +53,7 @@ impl BasicDaoService {
                     transfer.amount
                 ));
             } else {
-                *account -= transfer.amount.clone();
+                *account -= transfer.amount + self.system_params.transfer_fee;
                 let to_account = self.accounts.entry(transfer.to).or_default();
                 *to_account += transfer.amount;
             }
@@ -80,6 +80,10 @@ impl BasicDaoService {
     }
 
     /// Submit a proposal
+    ///
+    /// A proposal contains a canister ID, method name and method args. If enough users
+    /// vote "yes" on the proposal, the given method will be called with the given method
+    /// args on the given canister.
     pub fn submit_proposal(&mut self, payload: ProposalPayload) -> Result<u64, String> {
         self.deduct_proposal_submission_deposit()?;
 

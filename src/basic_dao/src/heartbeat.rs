@@ -31,10 +31,11 @@ async fn execute_accepted_proposals() {
 
 /// Execute the given proposal
 async fn execute_proposal(proposal: Proposal) -> Result<(), String> {
-    ic_cdk::api::call::call(
+    ic_cdk::api::call::call_raw(
         proposal.payload.canister_id,
         &proposal.payload.method,
-        (&proposal.payload.message,)
+        proposal.payload.message.clone(),
+        0
     )
         .await
         .map_err(|(code, msg)| {
@@ -46,6 +47,7 @@ async fn execute_proposal(proposal: Proposal) -> Result<(), String> {
                 code, msg
             )
         })
+        .map(|_| ())
 }
 
 /// TODO: Remove expired proposals

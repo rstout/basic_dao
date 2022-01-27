@@ -9,39 +9,50 @@ type Tokens = record {
 };
 
 type ProposalState = variant {
-   Open;
-   Accepted;
-   Rejected;
-   Executing;
-   Succeeded;
-   Failed: text;
+    // The proposal is open for voting
+    Open;
+
+    // Enough "yes" votes have been cast to accept the proposal, and it will soon be executed
+    Accepted;
+
+    // Enough "no" votes have been cast to reject the proposal, and it will not be executed
+    Rejected;
+
+    // The proposal is currently being executed
+    Executing;
+
+    // The proposal has been successfully executed
+    Succeeded;
+
+    // A failure occurred while executing the proposal
+    Failed: text;
 };
 
 type Proposal = record {
-  id: nat64;
-  timestamp: nat64;
-  proposer: principal;
-  payload: ProposalPayload;
-  state: ProposalState;
-  votes_yes: Tokens;
-  votes_no: Tokens;
-  voters: vec principal;
+    id: nat64;
+    timestamp: nat64;
+    proposer: principal;
+    payload: ProposalPayload;
+    state: ProposalState;
+    votes_yes: Tokens;
+    votes_no: Tokens;
+    voters: vec principal;
 };
 
 type ProposalPayload = record {
-   canister_id: principal;
-   method: text;
-   message: blob;
+    canister_id: principal;
+    method: text;
+    message: blob;
 };
 
 type SubmitProposalResult = variant {
-    Ok: nat;
+    Ok: nat64;
     Err: text;
 };
 
 type Vote = variant {
-   Yes;
-   No;
+    Yes;
+    No;
 };
 
 type Account = record {
@@ -82,10 +93,10 @@ type UpdateSystemParamsPayload = record {
 };
 
 service : (BasicDaoStableStorage) -> {
-    // TODO: doc
+    // Get the current system params
     get_system_params: () -> (SystemParams);
 
-    // TODO: doc
+    // Transfer tokens from the caller's account to another account
     transfer: (TransferArgs) -> (TransferResult);
 
     // Returns the amount of Tokens the caller owns
@@ -94,7 +105,11 @@ service : (BasicDaoStableStorage) -> {
     // Lists all accounts
     list_accounts: () -> (vec Account) query;
 
-    // TODO: doc
+    // Submit a proposal
+    //
+    // A proposal contains a canister ID, method name and method args. If enough users
+    // vote "yes" on the proposal, the given method will be called with the given method
+    // args on the given canister.
     submit_proposal: (ProposalPayload) -> (SubmitProposalResult);
 
     // Return the proposal with the given ID, if one exists
@@ -103,9 +118,9 @@ service : (BasicDaoStableStorage) -> {
     // Return the list of all proposals
     list_proposals: () -> (vec Proposal);
 
-    // TODO: doc
+    // Vote on an open proposal
     vote: (VoteArgs) -> (VoteResult);
 
-    // TODO: doc
+    // Update system params. Only callable via proposal execution.
     update_system_params: (UpdateSystemParamsPayload) -> ();
 }
