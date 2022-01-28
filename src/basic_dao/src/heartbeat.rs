@@ -5,7 +5,6 @@ use crate::types::{Proposal, ProposalState};
 #[heartbeat]
 async fn heartbeat() {
     execute_accepted_proposals().await;
-    remove_expired_proposals().await;
 }
 
 /// Execute all accepted proposals
@@ -48,9 +47,4 @@ async fn execute_proposal(proposal: Proposal) -> Result<(), String> {
             )
         })
         .map(|_| ())
-}
-
-/// Remove expired proposals
-async fn remove_expired_proposals() {
-    ()
 }

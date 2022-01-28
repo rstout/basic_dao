@@ -14,10 +14,14 @@ TODO
 
 Verify the following before running this demo:
 
-*  You have downloaded and installed the [DFINITY Canister
+* You have installed the Rust toolchain (e.g. cargo)
+
+* You have installed [didc](https://github.com/dfinity/candid/tree/master/tools/didc)
+
+* You have downloaded and installed the [DFINITY Canister
    SDK](https://sdk.dfinity.org).
 
-*  You have stopped any Internet Computer or other network process that would
+* You have stopped any Internet Computer or other network process that would
    create a port conflict on 8000.
 
 ## Demo
@@ -25,32 +29,169 @@ Verify the following before running this demo:
 1. Start a local internet computer.
 
    ```text
-   dfx start
+   $ dfx start
    ```
 
-1. Open a new terminal window.
+2. Open a new terminal window.
 
-1. Reserve an identifier for your canister.
+3. Build the basic_dao canister.
 
    ```text
-   dfx canister create --all
+   $ make
    ```
-
-1. Build your canister.
+   
+4. Create test identities
 
    ```text
-   dfx build
+   $ dfx identity new Alice; dfx identity use Alice; export ALICE=$(dfx identity get-principal); 
+   $ dfx identity new Bob; dfx identity use Bob; export BOB=$(dfx identity get-principal); 
    ```
 
-1. Deploy your canister.
+5. Deploy `basic_dao` with initial accounts.
 
    ```text
-   dfx canister install --all
+   $ dfx deploy --argument "(record {
+    accounts = vec { record { owner = principal \"$ALICE\"; tokens = record { amount_e8s = 100000000:nat64 }; }; 
+                     record { owner = principal \"$BOB\"; tokens = record { amount_e8s = 100000000:nat64 };}; };
+    proposals = vec {};
+    system_params = record {
+        transfer_fee = record { amount_e8s = 10000:nat64 };
+        proposal_vote_threshold = record { amount_e8s = 10000000:nat64 };
+        proposal_submission_deposit = record { amount_e8s = 10000:nat64 };
+    };
+   })"
    ```
 
-1. List accounts.
+6. List accounts and confirm you see 2 accounts
 
    ```text
-   dfx canister call basic_dao list_accounts '()'
+   $ dfx canister call basic_dao list_accounts '()'
    ```
 
+7. Call `account_balance` as `Bob`.
+
+   ```text
+   $ dfx canister call basic_dao account_balance '()'
+   ```
+   You should see as output:
+
+   ```text
+   (record { amount_e8s = 100_000_000 : nat64 })
+   ```
+   
+8. Transfer tokens to `Alice`:
+
+   ```text
+   $ dfx canister call basic_dao transfer "(record { to = principal \"$ALICE\"; amount = record { amount_e8s = 90000000:nat64;};})";
+   (variant { Ok })
+   ```
+
+9. List accounts and see that the transfer was made:
+
+   ```text
+   $ dfx canister call basic_dao list_accounts '()';
+   (
+     vec {
+       record {
+         owner = principal "$ALICE";
+         tokens = record { amount_e8s = 190_000_000 : nat64 };
+       };
+       record {
+         owner = principal "$BOB";
+         tokens = record { amount_e8s = 9_990_000 : nat64 };
+       };
+     },
+   )
+   ```
+   Note that the transfer fee was deducted from Bob's account
+   
+10. Let's make a proposal to change the transfer fee. We can call `get_system_params` to learn the current transfer fee:
+   ```text
+   $ dfx canister call basic_dao get_system_params '()'
+   (
+     record {
+       transfer_fee = record { amount_e8s = 10_000 : nat64 };
+       proposal_vote_threshold = record { amount_e8s = 10_000_000 : nat64 };
+       proposal_submission_deposit = record { amount_e8s = 10_000 : nat64 };
+     },
+   )
+   ```
+
+   To change `transfer_fee`, we need to submit a proposal by calling `submit_proposal`, which takes a `ProposalPayload` as an arg:
+   ```text
+   type ProposalPayload = record {
+     canister_id: principal;
+     method: text;
+     message: blob;
+   };
+   ```
+   
+   We can change `transfer_fee` by calling basic_dao's `update_system_params` method. This method takes
+   a `UpdateSystemParamsPayload` as an arg, which we need to encode into a `blob` to use in `ProposalPayload`.
+   Use `didc` to encode a `UpdateSystemParamsPayload`:
+
+   ```text
+   $ didc encode '(record { transfer_fee = opt record { amount_e8s = 20000:nat64; }; })' -f blob
+   blob "DIDL\03l\01\f2\c7\94\ae\03\01n\02l\01\b9\ef\93\80\08x\01\00\01 N\00\00\00\00\00\00"
+   ```
+   
+   We can then submit the proposal:
+   ```text
+   $ dfx canister call basic_dao submit_proposal '(record { canister_id = principal "rrkah-fqaaa-aaaaa-aaaaq-cai";
+   method = "update_system_params":text;
+   message = blob "DIDL\03l\01\f2\c7\94\ae\03\01n\02l\01\b9\ef\93\80\08x\01\00\01 N\00\00\00\00\00\00"; })'
+   ```
+   
+   Note the output proposal ID:
+   ```text
+   (variant { Ok = 0 : nat64 })
+   ```
+   
+   Confirm the proposal was created:
+   ```text
+   $ dfx canister call basic_dao get_proposal '(0:nat64)'
+   ```
+   You should see `state = variant { Open };` in the output.
+
+   Vote on the proposal:
+   ```text
+   $ dfx canister call basic_dao vote '(record { proposal_id = 0:nat64; vote = variant { Yes };})'
+   ```
+   
+   You should see the following output:
+   ```text
+   (variant { Ok = variant { Open } })
+   ```
+   
+   Because we voted as `Bob`, and `Bob` does not have enough voting power to pass proposals, the proposal remains `Open`.
+   To get the proposal accepted, we can vote with `Alice`:
+   ```text
+   $ dfx identity use Alice; dfx canister call basic_dao vote '(record { proposal_id = 0:nat64; vote = variant { Yes };})';
+   ```
+   
+   You should see the following output:
+   ```text
+   (variant { Ok = variant { Accepted } })
+   ```
+
+   Query the proposal again:
+   ```text
+   $ dfx canister call basic_dao get_proposal '(0:nat64)'
+   ```
+   And see that the state is `Succeeded`:
+   ```text
+   state = variant { Succeeded };
+   ```
+   
+   Query the system params again and see that `transfer_fee` has been updated:
+   ```text
+   $ dfx canister call basic_dao get_system_params '()'
+   (
+     record {
+       transfer_fee = record { amount_e8s = 20_000 : nat64 };
+       proposal_vote_threshold = record { amount_e8s = 10_000_000 : nat64 };
+       proposal_submission_deposit = record { amount_e8s = 10_000 : nat64 };
+     },
+   )
+   ```
+   
