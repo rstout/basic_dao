@@ -1,4 +1,5 @@
 .dfx/
 .idea/
+node_modules/
 target/
 Cargo.lock
