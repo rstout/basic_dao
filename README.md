@@ -9,14 +9,13 @@ A `basic_dao` can be initialized with a set of accounts: mappings from principal
 Account owners can query their account balance by calling `account_balance` and transfer tokens to other
 accounts by calling `transfer`. Anyone can call `list_accounts` to view all accounts. 
 
-Account owners can also submit and vote on proposals. An account owner can submit a proposal by calling 
-`submit_proposal`. A proposal specifies a canister, method and arguments for this method. Account owners can cast 
-votes (either `Yes` or `No`) on a proposal by calling `vote`. The amount of votes cast is equal to amount of tokens
-the account owner has. If enough `Yes` votes are cast, `basic_dao` will execute the proposal by calling the 
-proposal's given method with the given args against the given canister. If enough `No` votes are cast, the 
-proposal is not executed, and is instead marked as `Rejected`.
+Account owners can also submit proposals by calling `submit_proposal`. A proposal specifies a canister, method 
+and arguments for this method. Account owners can cast votes (either `Yes` or `No`) on a proposal by calling `vote`. 
+The amount of votes cast is equal to amount of tokens the account owner has. If enough `Yes` votes are cast, 
+`basic_dao` will execute the proposal by calling the proposal's given method with the given args against the given 
+canister. If enough `No` votes are cast, the proposal is not executed, and is instead marked as `Rejected`.
 
-Certain system parameters, like the number of `Yes` votes to pass a proposal, can be queried by calling 
+Certain system parameters, like the number of `Yes` votes needed to pass a proposal, can be queried by calling 
 `get_system_params`. These system params can be modified via the proposal process, i.e. a proposal can be
 made to call `update_system_params` with updated values. The below demo does exactly that.
 
@@ -36,7 +35,7 @@ Verify the following before running this demo:
 
 ## Demo
 
-1. Build the basic_dao canister.
+1. Build the `basic_dao` canister.
 
    ```text
    $ make clean; make
