@@ -9,7 +9,7 @@ A `basic_dao` can be initialized with a set of accounts: mappings from principal
 Account owners can query their account balance by calling `account_balance` and transfer tokens to other
 accounts by calling `transfer`. Anyone can call `list_accounts` to view all accounts. 
 
-Account owners can also submit proposals by calling `submit_proposal`. A proposal specifies a canister, method 
+Account owners can submit proposals by calling `submit_proposal`. A proposal specifies a canister, method 
 and arguments for this method. Account owners can cast votes (either `Yes` or `No`) on a proposal by calling `vote`. 
 The amount of votes cast is equal to amount of tokens the account owner has. If enough `Yes` votes are cast, 
 `basic_dao` will execute the proposal by calling the proposal's given method with the given args against the given 
