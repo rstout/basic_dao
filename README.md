@@ -1,14 +1,24 @@
 # Basic DAO
 
-This sample project demonstrates a basic DAO
+This sample project demonstrates a basic DAO (Decentralized Autonomous Organization) that can be deployed to the
+[Internet Computer](https://github.com/dfinity/ic) 
 
 ## Overview
 
-TODO
+A `basic_dao` can be initialized with a set of accounts: mappings from principal IDs to an amount of tokens. 
+Account owners can query their account balance by calling `account_balance` and transfer tokens to other
+accounts by calling `transfer`. Anyone can call `list_accounts` to view all accounts. 
 
-## Implementation
+Account owners can also submit and vote on proposals. An account owner can submit a proposal by calling 
+`submit_proposal`. A proposal specifies a canister, method and arguments for this method. Account owners can cast 
+votes (either `Yes` or `No`) on a proposal by calling `vote`. The amount of votes cast is equal to amount of tokens
+the account owner has. If enough `Yes` votes are cast, `basic_dao` will execute the proposal by calling the 
+proposal's given method with the given args against the given canister. If enough `No` votes are cast, the 
+proposal is not executed, and is instead marked as `Rejected`.
 
-TODO
+Certain system parameters, like the number of `Yes` votes to pass a proposal, can be queried by calling 
+`get_system_params`. These system params can be modified via the proposal process, i.e. a proposal can be
+made to call `update_system_params` with updated values. The below demo does exactly that.
 
 ## Prerequisites
 
@@ -26,19 +36,19 @@ Verify the following before running this demo:
 
 ## Demo
 
-1. Start a local internet computer.
+1. Build the basic_dao canister.
+
+   ```text
+   $ make clean; make
+   ```
+
+2. Start a local internet computer.
 
    ```text
    $ dfx start
    ```
 
-2. Open a new terminal window.
-
-3. Build the basic_dao canister.
-
-   ```text
-   $ make
-   ```
+3. Open a new terminal window.
    
 4. Create test identities
 
@@ -51,13 +61,13 @@ Verify the following before running this demo:
 
    ```text
    $ dfx deploy --argument "(record {
-    accounts = vec { record { owner = principal \"$ALICE\"; tokens = record { amount_e8s = 100000000:nat64 }; }; 
-                     record { owner = principal \"$BOB\"; tokens = record { amount_e8s = 100000000:nat64 };}; };
+    accounts = vec { record { owner = principal \"$ALICE\"; tokens = record { amount_e8s = 100_000_000:nat64 }; }; 
+                     record { owner = principal \"$BOB\"; tokens = record { amount_e8s = 100_000_000:nat64 };}; };
     proposals = vec {};
     system_params = record {
-        transfer_fee = record { amount_e8s = 10000:nat64 };
-        proposal_vote_threshold = record { amount_e8s = 10000000:nat64 };
-        proposal_submission_deposit = record { amount_e8s = 10000:nat64 };
+        transfer_fee = record { amount_e8s = 10_000:nat64 };
+        proposal_vote_threshold = record { amount_e8s = 10_000_000:nat64 };
+        proposal_submission_deposit = record { amount_e8s = 10_000:nat64 };
     };
    })"
    ```
@@ -82,32 +92,35 @@ Verify the following before running this demo:
 8. Transfer tokens to `Alice`:
 
    ```text
-   $ dfx canister call basic_dao transfer "(record { to = principal \"$ALICE\"; amount = record { amount_e8s = 90000000:nat64;};})";
+   $ dfx canister call basic_dao transfer "(record { to = principal \"$ALICE\"; amount = record { amount_e8s = 90_000_000:nat64;};})";
    (variant { Ok })
    ```
 
 9. List accounts and see that the transfer was made:
 
    ```text
-   $ dfx canister call basic_dao list_accounts '()';
-   (
-     vec {
-       record {
-         owner = principal "$ALICE";
-         tokens = record { amount_e8s = 190_000_000 : nat64 };
-       };
-       record {
-         owner = principal "$BOB";
-         tokens = record { amount_e8s = 9_990_000 : nat64 };
-       };
-     },
-   )
+   $ dfx canister call basic_dao list_accounts '()'
    ```
-   Note that the transfer fee was deducted from Bob's account
+   Output:
+   ```text
+    (
+      vec {
+        record {
+          owner = principal "$ALICE";
+          tokens = record { amount_e8s = 190_000_000 : nat64 };
+        };
+        record {
+          owner = principal "$BOB";
+          tokens = record { amount_e8s = 9_990_000 : nat64 };
+        };
+      },
+    )
+    ```
+    Note that the transfer fee was deducted from Bob's account
    
 10. Let's make a proposal to change the transfer fee. We can call `get_system_params` to learn the current transfer fee:
    ```text
-   $ dfx canister call basic_dao get_system_params '()'
+   $ dfx canister call basic_dao get_system_params '()';
    (
      record {
        transfer_fee = record { amount_e8s = 10_000 : nat64 };
@@ -131,7 +144,7 @@ Verify the following before running this demo:
    Use `didc` to encode a `UpdateSystemParamsPayload`:
 
    ```text
-   $ didc encode '(record { transfer_fee = opt record { amount_e8s = 20000:nat64; }; })' -f blob
+   $ didc encode '(record { transfer_fee = opt record { amount_e8s = 20_000:nat64; }; })' -f blob
    blob "DIDL\03l\01\f2\c7\94\ae\03\01n\02l\01\b9\ef\93\80\08x\01\00\01 N\00\00\00\00\00\00"
    ```
    
