@@ -92,6 +92,9 @@ Verify the following before running this demo:
 
    ```text
    $ dfx canister call basic_dao transfer "(record { to = principal \"$ALICE\"; amount = record { amount_e8s = 90_000_000:nat64;};})";
+   ```
+   Output:
+   ```text
    (variant { Ok })
    ```
 
@@ -120,6 +123,10 @@ Verify the following before running this demo:
 10. Let's make a proposal to change the transfer fee. We can call `get_system_params` to learn the current transfer fee:
    ```text
    $ dfx canister call basic_dao get_system_params '()';
+   ```
+
+   Output:
+   ```text
    (
      record {
        transfer_fee = record { amount_e8s = 10_000 : nat64 };
@@ -144,6 +151,9 @@ Verify the following before running this demo:
 
    ```text
    $ didc encode '(record { transfer_fee = opt record { amount_e8s = 20_000:nat64; }; })' -f blob
+   ```
+   Output:
+   ```text
    blob "DIDL\03l\01\f2\c7\94\ae\03\01n\02l\01\b9\ef\93\80\08x\01\00\01 N\00\00\00\00\00\00"
    ```
    
@@ -198,6 +208,9 @@ Verify the following before running this demo:
    Query the system params again and see that `transfer_fee` has been updated:
    ```text
    $ dfx canister call basic_dao get_system_params '()'
+   ```
+   Output:
+   ```text
    (
      record {
        transfer_fee = record { amount_e8s = 20_000 : nat64 };
